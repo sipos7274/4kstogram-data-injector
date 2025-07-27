@@ -17,6 +17,7 @@ Built with `tkinter`, powered by `gallery-dl` and `ffmpeg`.
   - Browser (Chrome / Firefox)
   - Media type
   - Post limit
+  
 
 ---
 
