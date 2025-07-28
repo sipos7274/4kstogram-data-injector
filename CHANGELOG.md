@@ -1,7 +1,7 @@
 # Changelog
 ---
 
-## [1.1.2] - 2025-07-25
+## [1.1.2] - 2025-07-28
 
 ### Release
 - Small improvments to the UI
