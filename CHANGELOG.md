@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.2] - 2025-07-25
+
+### Initial release
+- Small improvments to the UI
+
 ## [1.1.1] - 2025-07-27
 
 ### Added
