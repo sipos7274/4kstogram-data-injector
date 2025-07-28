@@ -165,6 +165,7 @@ class IntegerEntry(ttk.Entry):
 
     def _validate(self, *args):
         value = self.var.get()
+        # Allow only digits (positive integers including 0)
         if not value.isdigit() and value != "":
             self.var.set(''.join(filter(str.isdigit, value)))
 
@@ -175,6 +176,17 @@ class IntegerEntry(ttk.Entry):
         self.var.set(str(value))
 
 class InstagramDownloaderApp:
+    def center_window(self):
+        self.root.update_idletasks()
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+        
     def __init__(self, root):
         self.root = root
         self.root.title("Instagram Media Downloader Pro")
@@ -189,9 +201,16 @@ class InstagramDownloaderApp:
         self.media_type.set(self.settings.get("media_type", "Posts"))
 
         self.create_widgets()
+        self.root.after(100, self.center_window)
 
         self.post_limit_entry.set_value(self.settings.get("post_limit", 10))
-
+        if not DB_FILE or not validate_database(DB_FILE):
+            messagebox.showwarning(
+                "No Database Found",
+                "No valid '.stogram.sqlite' database file was found in the current directory.\n"
+                "Please put me and /assets folder the same directory as the 4K stogram database"
+            )
+            self.root.destroy()  # Gracefully close the GUI if no database is found
         if DB_FILE and validate_database(DB_FILE):
             self.db_label.config(text=str(DB_FILE))
             self.reload_users()
@@ -232,7 +251,8 @@ class InstagramDownloaderApp:
 
         self.refresh_button = ttk.Button(self.root, text="Reload Users", command=self.reload_users, state="disabled")
         self.refresh_button.pack(pady=5)
-
+        
+        ttk.Button(range_frame, text="Set to 0 (All)", command=lambda: self.post_limit_entry.set_value(0)).pack(side='left', padx=10)
         ttk.Button(self.root, text="Add Media Manually to DB", command=self.add_manual_media).pack(pady=5)
 
         self.progress = ttk.Progressbar(self.root, mode='indeterminate')
