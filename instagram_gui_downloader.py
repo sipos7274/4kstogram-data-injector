@@ -321,7 +321,92 @@ class InstagramDownloaderApp:
             self.start_button.config(state="normal")
 
     def add_manual_media(self):
-        pass  # unchanged for brevity
+        if not self.user_var.get():
+            messagebox.showwarning("Warning", "Please select a user.")
+            return
+
+        index = self.user_dropdown.current()
+        if index < 0 or index >= len(self.users):
+            messagebox.showerror("Error", "Invalid user selection.")
+            return
+
+        subscription_id_blob, username = self.users[index]
+
+        # Let user select multiple files
+        file_paths = filedialog.askopenfilenames(
+            title="Select media files to insert",
+            filetypes=[("Media Files", "*.jpg *.jpeg *.png *.mp4")]
+        )
+        if not file_paths:
+            return
+
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        created_time = int(time.time())
+
+        cursor.execute(f"SELECT instagram_id FROM {SUBSCRIPTIONS_TABLE} WHERE query = ?", (username,))
+        result = cursor.fetchone()
+        owner_id = result[0] if result else None
+
+        user_media_path = MEDIA_BASE_PATH / username
+        user_thumb_path = user_media_path / THUMBNAIL_FOLDER_NAME
+        user_media_path.mkdir(parents=True, exist_ok=True)
+        user_thumb_path.mkdir(parents=True, exist_ok=True)
+
+        for fpath in file_paths:
+            fpath = Path(fpath)
+
+            # Copy file into user folder if not already there
+            dest_path = user_media_path / fpath.name
+            if not dest_path.exists():
+                try:
+                    import shutil
+                    shutil.copy(fpath, dest_path)
+                except Exception as e:
+                    self.log_output(f"❌ Failed to copy {fpath}: {e}")
+                    continue
+
+            file_relative_path = str(dest_path.relative_to(MEDIA_BASE_PATH.parent))
+
+            # Skip if already in DB
+            cursor.execute(f"SELECT COUNT(*) FROM {MEDIA_TABLE} WHERE file = ?", (file_relative_path,))
+            if cursor.fetchone()[0] > 0:
+                self.log_output(f"Skipping existing: {fpath.name}")
+                continue
+
+            # Generate thumbnail
+            if fpath.suffix.lower() == ".mp4":
+                thumb_name = f"{fpath.stem}.jpg"
+                thumb_path = user_thumb_path / thumb_name
+                subprocess.run([
+                    FFMPEG_EXE,
+                    "-ss", "3",
+                    "-i", str(dest_path),
+                    "-vframes", "1",
+                    str(thumb_path)
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                thumbnail_relative_path = str(thumb_path.relative_to(MEDIA_BASE_PATH.parent))
+            else:
+                thumbnail_relative_path = file_relative_path
+
+            # Insert into DB
+            cursor.execute(f"""
+                INSERT INTO {MEDIA_TABLE} (subscriptionId, created_time, thumbnail_file, file, ownerName, ownerId)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                subscription_id_blob,
+                created_time,
+                thumbnail_relative_path,
+                file_relative_path,
+                username,
+                owner_id
+            ))
+            self.log_output(f"Inserted manually: {fpath.name}")
+
+        conn.commit()
+        conn.close()
+        self.log_output("\n✅ Manual insert complete.")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

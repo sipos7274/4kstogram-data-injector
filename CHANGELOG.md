@@ -1,5 +1,11 @@
 # Changelog
 ---
+### Release
+
+## [1.1.3] - 2025-08-25
+
+### Fixed
+- "Add Media Manually to DB" button fixed and improved
 
 ## [1.1.2] - 2025-07-28
 
