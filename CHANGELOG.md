@@ -3,16 +3,10 @@
 
 ### Release addusertodb program
 
-## [1.0.0] - 2025-08-27
+## [1.2.0] - 2025-08-27
 
 - addusertodb utility program
 - You can add new users to your stogram by using the addusertodb program, simple type the username and add to the db
-
-### Release
-
-## [1.2.0] - 2025-08-25
-
-- Now you can download new users to your 4kstogram
 
 ### Release
 
