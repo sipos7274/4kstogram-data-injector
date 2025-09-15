@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import time
 import sqlite3
@@ -29,6 +30,10 @@ for file in os.listdir():
 GDL_INCLUDE_OPTIONS = {
     "Posts": "posts",
     "Stories": "stories",
+    "Highlights": "highlights",
+    "Reels": "reels",
+    "Avatar": "avatar",
+    "Tagged": "tagged"
 }
 
 def fetch_users():
@@ -190,7 +195,7 @@ class InstagramDownloaderApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Instagram Media Downloader Pro")
-        self.root.geometry("650x700")
+        self.root.geometry("720x720")
         self.root.configure(bg="#f0f0f0")
         self.users = []
         self.media_type = tk.StringVar()
@@ -232,7 +237,8 @@ class InstagramDownloaderApp:
         media_type_frame = ttk.LabelFrame(self.root, text="Download Type")
         media_type_frame.pack(pady=10, fill='x', padx=20)
         for mtype in GDL_INCLUDE_OPTIONS.keys():
-            ttk.Radiobutton(media_type_frame, text=mtype, variable=self.media_type, value=mtype).pack(anchor='w', padx=10, pady=2)
+            #ttk.Radiobutton(media_type_frame, text=mtype, variable=self.media_type, value=mtype).pack(anchor='w', padx=10, pady=2)
+            ttk.Radiobutton(media_type_frame, text=mtype, variable=self.media_type, value=mtype).pack(side='left', padx=5, pady=2)
 
         browser_frame = ttk.LabelFrame(self.root, text="Browser for Cookies")
         browser_frame.pack(pady=10, fill='x', padx=20)
@@ -253,13 +259,32 @@ class InstagramDownloaderApp:
         self.refresh_button.pack(pady=5)
         
         ttk.Button(range_frame, text="Set to 0 (All)", command=lambda: self.post_limit_entry.set_value(0)).pack(side='left', padx=10)
-        ttk.Button(self.root, text="Add Media Manually to DB", command=self.add_manual_media).pack(pady=5)
+        ttk.Button(self.root, text="Add Media Manually to Database", command=self.add_manual_media).pack(pady=5)
+
+        # New button to run addusertodb.exe
+        ttk.Button(self.root, text="Add Subscription to Database", command=self.run_addusertodb).pack(pady=5)
 
         self.progress = ttk.Progressbar(self.root, mode='indeterminate')
         self.progress.pack(fill='x', padx=20, pady=5)
 
         self.output_box = tk.Text(self.root, height=12, wrap='word', font=("Consolas", 10))
         self.output_box.pack(fill='both', expand=True, padx=10, pady=10)
+
+    def run_addusertodb(self):
+        """Launch the addusertodb.exe from the assets folder"""
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(sys.argv[0])))
+        #exe_path = os.path.join(base_path, "assets", "addusertodb.exe")
+        exe_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), "addusertodb.exe")
+
+        if not os.path.exists(exe_path):
+            messagebox.showerror("Error", f"Cannot find:\n{exe_path}")
+            return
+
+        try:
+            subprocess.Popen(exe_path)
+            #messagebox.showinfo("Launched", "addusertodb.exe started successfully.")
+        except Exception as e:
+            messagebox.showerror("Execution Failed", str(e))
 
     def log_output(self, text):
         self.output_box.insert(tk.END, f"{text}\n")
@@ -332,7 +357,6 @@ class InstagramDownloaderApp:
 
         subscription_id_blob, username = self.users[index]
 
-        # Let user select multiple files
         file_paths = filedialog.askopenfilenames(
             title="Select media files to insert",
             filetypes=[("Media Files", "*.jpg *.jpeg *.png *.mp4")]
@@ -356,7 +380,6 @@ class InstagramDownloaderApp:
         for fpath in file_paths:
             fpath = Path(fpath)
 
-            # Copy file into user folder if not already there
             dest_path = user_media_path / fpath.name
             if not dest_path.exists():
                 try:
@@ -368,13 +391,11 @@ class InstagramDownloaderApp:
 
             file_relative_path = str(dest_path.relative_to(MEDIA_BASE_PATH.parent))
 
-            # Skip if already in DB
             cursor.execute(f"SELECT COUNT(*) FROM {MEDIA_TABLE} WHERE file = ?", (file_relative_path,))
             if cursor.fetchone()[0] > 0:
                 self.log_output(f"Skipping existing: {fpath.name}")
                 continue
 
-            # Generate thumbnail
             if fpath.suffix.lower() == ".mp4":
                 thumb_name = f"{fpath.stem}.jpg"
                 thumb_path = user_thumb_path / thumb_name
@@ -389,7 +410,6 @@ class InstagramDownloaderApp:
             else:
                 thumbnail_relative_path = file_relative_path
 
-            # Insert into DB
             cursor.execute(f"""
                 INSERT INTO {MEDIA_TABLE} (subscriptionId, created_time, thumbnail_file, file, ownerName, ownerId)
                 VALUES (?, ?, ?, ?, ?, ?)

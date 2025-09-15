@@ -1,6 +1,16 @@
 # Changelog
 ---
 
+### Release
+
+## [1.3.0] - 2025-09-15
+
+- addusertodb are integrated now
+- Minor grammer changes
+- UI improvments
+- Highlights, reels avatar and tagged downloads now available
+- Bugfixes
+
 ### Release addusertodb program
 
 ## [1.2.0] - 2025-08-27
