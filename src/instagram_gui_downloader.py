@@ -28,6 +28,7 @@ for file in os.listdir():
             break
 
 GDL_INCLUDE_OPTIONS = {
+    "All": "all",
     "Posts": "posts",
     "Stories": "stories",
     "Highlights": "highlights",
