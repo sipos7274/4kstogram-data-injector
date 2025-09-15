@@ -29,6 +29,7 @@ for file in os.listdir():
 
 GDL_INCLUDE_OPTIONS = {
     "All": "all",
+    "All (except Tagged)": "posts,stories,highlights,reels,avatar",
     "Posts": "posts",
     "Stories": "stories",
     "Highlights": "highlights",
@@ -249,7 +250,7 @@ class InstagramDownloaderApp:
 
         range_frame = ttk.LabelFrame(self.root, text="Post Limit")
         range_frame.pack(pady=10, fill='x', padx=20)
-        ttk.Label(range_frame, text="Number of latest posts (0 = all):").pack(side='left', padx=10, pady=5)
+        ttk.Label(range_frame, text="Number of latest posts:").pack(side='left', padx=10, pady=5)
         self.post_limit_entry = IntegerEntry(range_frame, width=6)
         self.post_limit_entry.pack(side='left', pady=5)
 
