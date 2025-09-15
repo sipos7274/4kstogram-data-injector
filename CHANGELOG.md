@@ -3,13 +3,13 @@
 
 ### Release
 
-## [1.3.1] - 2025-09-15
+## [1.3.2] - 2025-09-15
 
 - addusertodb are integrated now
 - Minor grammer changes
 - UI improvments
 - Highlights, reels avatar and tagged downloads now available
-- Added all button
+- Added all buttons
 - Bugfixes
 
 ### Release addusertodb program
